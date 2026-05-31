@@ -1,2 +1,24 @@
-<canvas id="game" width="400" height="400"></canvas>
-<p>Счёт: <span id="score">0</span></p>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Snake Game</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="stats">
+  <span>Счёт: <span id="score">0</span></span>
+  <span>Рекорд: <span id="best">0</span></span>
+</div>
+
+<canvas id="game" width="500" height="500"></canvas>
+
+<div id="gameOver" class="hidden">
+  <h1>Игра окончена</h1>
+  <button onclick="restart()">Играть снова</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
