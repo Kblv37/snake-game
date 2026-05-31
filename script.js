@@ -1,101 +1,177 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-const box = 20;
-const canvasSize = 400;
+const scoreEl = document.getElementById("score");
+const bestEl = document.getElementById("best");
 
-let snake = [
-  { x: 200, y: 200 }
-];
+const size = 25;
+const cells = canvas.width / size;
 
-let food = randomFood();
+let snake;
+let food;
+let dx;
+let dy;
+let score;
+let gameLoop;
 
-let dx = box;
-let dy = 0;
+bestEl.textContent =
+localStorage.getItem("snakeBest") || 0;
 
-let score = 0;
+function startGame() {
 
-document.addEventListener("keydown", changeDirection);
+  snake = [
+    {x: 10, y: 10}
+  ];
 
-function randomFood() {
+  food = spawnFood();
+
+  dx = 1;
+  dy = 0;
+
+  score = 0;
+  scoreEl.textContent = score;
+
+  clearInterval(gameLoop);
+  gameLoop = setInterval(update, 120);
+
+  document
+    .getElementById("gameOver")
+    .classList.add("hidden");
+}
+
+function spawnFood() {
   return {
-    x: Math.floor(Math.random() * (canvasSize / box)) * box,
-    y: Math.floor(Math.random() * (canvasSize / box)) * box
+    x: Math.floor(Math.random() * cells),
+    y: Math.floor(Math.random() * cells)
   };
 }
 
-function changeDirection(event) {
-  if (event.key === "ArrowUp" && dy === 0) {
+document.addEventListener("keydown", e => {
+
+  if (e.key === "ArrowUp" && dy !== 1) {
     dx = 0;
-    dy = -box;
+    dy = -1;
   }
 
-  if (event.key === "ArrowDown" && dy === 0) {
+  if (e.key === "ArrowDown" && dy !== -1) {
     dx = 0;
-    dy = box;
+    dy = 1;
   }
 
-  if (event.key === "ArrowLeft" && dx === 0) {
-    dx = -box;
+  if (e.key === "ArrowLeft" && dx !== 1) {
+    dx = -1;
     dy = 0;
   }
 
-  if (event.key === "ArrowRight" && dx === 0) {
-    dx = box;
+  if (e.key === "ArrowRight" && dx !== -1) {
+    dx = 1;
     dy = 0;
   }
-}
 
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+});
 
-  // еда
-  ctx.fillStyle = "red";
-  ctx.fillRect(food.x, food.y, box, box);
-
-  // змейка
-  ctx.fillStyle = "lime";
-
-  snake.forEach(segment => {
-    ctx.fillRect(segment.x, segment.y, box, box);
-  });
+function update() {
 
   let head = {
     x: snake[0].x + dx,
     y: snake[0].y + dy
   };
 
-  // съели еду
-  if (head.x === food.x && head.y === food.y) {
-    score++;
-    document.getElementById("score").textContent = score;
-    food = randomFood();
-  } else {
-    snake.pop();
-  }
-
-  // выход за границы
   if (
     head.x < 0 ||
     head.y < 0 ||
-    head.x >= canvasSize ||
-    head.y >= canvasSize
+    head.x >= cells ||
+    head.y >= cells
   ) {
-    alert(`Игра окончена! Счёт: ${score}`);
-    location.reload();
-    return;
+    return gameOver();
   }
 
-  // столкновение с собой
   for (let part of snake) {
-    if (head.x === part.x && head.y === part.y) {
-      alert(`Игра окончена! Счёт: ${score}`);
-      location.reload();
-      return;
+    if (
+      head.x === part.x &&
+      head.y === part.y
+    ) {
+      return gameOver();
     }
   }
 
   snake.unshift(head);
+
+  if (
+    head.x === food.x &&
+    head.y === food.y
+  ) {
+
+    score++;
+    scoreEl.textContent = score;
+
+    let best =
+      Number(localStorage.getItem("snakeBest")) || 0;
+
+    if (score > best) {
+      localStorage.setItem(
+        "snakeBest",
+        score
+      );
+
+      bestEl.textContent = score;
+    }
+
+    food = spawnFood();
+
+  } else {
+    snake.pop();
+  }
+
+  draw();
 }
 
-setInterval(draw, 120);
+function draw() {
+
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  ctx.fillStyle = "red";
+
+  ctx.fillRect(
+    food.x * size,
+    food.y * size,
+    size,
+    size
+  );
+
+  snake.forEach((part, index) => {
+
+    ctx.fillStyle =
+      index === 0
+        ? "#00ff88"
+        : "#00aa55";
+
+    ctx.fillRect(
+      part.x * size,
+      part.y * size,
+      size - 2,
+      size - 2
+    );
+
+  });
+
+}
+
+function gameOver() {
+  clearInterval(gameLoop);
+
+  document
+    .getElementById("gameOver")
+    .classList.remove("hidden");
+}
+
+function restart() {
+  startGame();
+}
+
+startGame();
